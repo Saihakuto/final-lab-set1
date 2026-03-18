@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Task Board — Final Lab Set 1</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --surface2:#21262d;
+      --border:  #30363d;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --blue:    #58a6ff;
+      --blue2:   #1f6feb;
+      --green:   #3fb950;
+      --yellow:  #d29922;
+      --red:     #f85149;
+      --purple:  #bc8cff;
+      --cyan:    #39d353;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    button { cursor: pointer; font-family: inherit; }
+    .hidden { display: none !important; }
+
+    /* ── LOGIN PAGE ── */
+    #auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at top, #1f2d3d 0%, var(--bg) 70%);
+      padding: 1rem;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .login-icon { font-size: 2.5rem; text-align: center; margin-bottom: 0.5rem; }
+    .login-title {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: var(--text);
+    }
+    .login-sub {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+    }
+    .field input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--blue); }
+    .btn-login {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--blue2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-login:hover { background: #388bfd; transform: translateY(-1px); }
+    .login-msg {
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    .login-msg.err  { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+    .login-msg.ok   { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+    .seed-hint {
+      margin-top: 1.25rem;
+      padding: 0.85rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .seed-hint strong { color: var(--text); }
+
+    /* ── APP LAYOUT ── */
+    #app-page { display: flex; height: 100vh; overflow: hidden; }
+
+    .sidebar {
+      width: 230px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sb-logo {
+      padding: 1.1rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.3px;
+    }
+    .sb-nav { flex: 1; padding: 0.5rem; }
+    .sb-link {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+      margin-bottom: 2px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sb-link:hover { background: var(--surface2); color: var(--text); }
+    .sb-link.on { background: rgba(88,166,255,0.12); color: var(--blue); }
+    .sb-link .ico { width: 18px; text-align: center; font-size: 1rem; }
+    .sb-link .cnt {
+      margin-left: auto;
+      background: var(--blue2);
+      color: white;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .sb-bottom { padding: 0.85rem; border-top: 1px solid var(--border); }
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.75rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .uavatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--blue2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .uinfo { flex: 1; min-width: 0; }
+    .uname { font-size: 0.82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .urole {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: white;
+    }
+    .urole.admin  { background: var(--purple); }
+    .urole.member { background: var(--blue2); }
+    .btn-logout {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-logout:hover { color: var(--red); }
+
+    /* ── MAIN AREA ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar {
+      padding: 1.1rem 1.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .page-body { flex: 1; overflow-y: auto; padding: 1.5rem 1.75rem; }
+
+    /* ── STATS ── */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.85rem; margin-bottom: 1.25rem; }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+    .stat-num { font-size: 1.5rem; font-weight: 700; }
+    .stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .fbtn {
+      padding: 0.4rem 0.85rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .fbtn:hover, .fbtn.on { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.1); }
+    .gap { flex: 1; }
+    .btn-new {
+      padding: 0.45rem 1rem;
+      background: var(--blue2);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s;
+    }
+    .btn-new:hover { background: #388bfd; }
+
+    /* ── TASK CARDS ── */
+    .tasklist { display: flex; flex-direction: column; gap: 0.65rem; }
+    .tcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      transition: border-left-color 0.2s;
+    }
+    .tcard.TODO        { border-left-color: var(--muted); }
+    .tcard.IN_PROGRESS { border-left-color: var(--yellow); }
+    .tcard.DONE        { border-left-color: var(--green); }
+    .tcard-top { display: flex; align-items: flex-start; gap: 0.75rem; }
+    .tcard-title { flex: 1; font-size: 0.9rem; font-weight: 600; }
+    .tcard-title.done { text-decoration: line-through; color: var(--muted); }
+    .tcard-desc { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+    .tcard-meta { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.55rem; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .tag-todo   { background: rgba(139,148,158,0.2); color: var(--muted); }
+    .tag-inprog { background: rgba(210,153,34,0.2);  color: #d29922; }
+    .tag-done   { background: rgba(63,185,80,0.2);   color: var(--green); }
+    .tag-low    { background: rgba(139,148,158,0.15); color: var(--muted); }
+    .tag-medium { background: rgba(88,166,255,0.15);  color: var(--blue); }
+    .tag-high   { background: rgba(248,81,73,0.15);   color: var(--red); }
+    .tag-user   { background: rgba(188,140,255,0.15); color: var(--purple); }
+    .tcard-acts { display: flex; gap: 0.3rem; flex-shrink: 0; }
+    .ibtn {
+      padding: 0.25rem 0.45rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      border-radius: 5px;
+      font-size: 0.8rem;
+      transition: all 0.15s;
+    }
+    .ibtn:hover { background: var(--surface2); }
+    .ibtn.edit:hover   { color: var(--blue); }
+    .ibtn.del:hover    { color: var(--red); }
+    .ssel {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+    .empty {
+      text-align: center;
+      padding: 3.5rem 1rem;
+      color: var(--muted);
+    }
+    .empty .big { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; padding: 1rem;
+    }
+    .mbox {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .mhead {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .mhead h3 { font-size: 1rem; font-weight: 700; }
+    .mclose {
+      background: none; border: none;
+      color: var(--muted); font-size: 1.1rem; padding: 2px 6px; border-radius: 4px;
+    }
+    .mclose:hover { background: var(--surface2); color: var(--text); }
+    .mbody { padding: 1.25rem; }
+    .mbody .field { margin-bottom: 0.9rem; }
+    .mbody input, .mbody select, .mbody textarea {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .mbody input:focus, .mbody select:focus, .mbody textarea:focus { border-color: var(--blue); }
+    .mbody textarea { min-height: 72px; resize: vertical; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .mfoot {
+      display: flex; gap: 0.6rem; justify-content: flex-end;
+      padding: 0.9rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-cancel {
+      padding: 0.5rem 1rem;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .btn-save {
+      padding: 0.5rem 1.25rem;
+      background: var(--blue2);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn-save:hover { background: #388bfd; }
+    .btn-del2 {
+      padding: 0.5rem 1rem;
+      background: rgba(248,81,73,0.12);
+      color: var(--red);
+      border: 1px solid rgba(248,81,73,0.3);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* ── PROFILE ── */
+    .pcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      max-width: 580px;
+    }
+    .phead { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .pavatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue2), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 700;
+    }
+    .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .pi label { display: block; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; }
+    .pi p { font-size: 0.9rem; font-weight: 500; }
+    .jwt-box {
+      margin-top: 1.25rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem;
+    }
+    .jwt-box h4 { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.85rem; }
+    .jwt-parts { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+    .jp {
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      word-break: break-all;
+    }
+    .jp1 { background: rgba(248,81,73,0.2);  color: #f85149; }
+    .jp2 { background: rgba(188,140,255,0.2); color: var(--purple); }
+    .jp3 { background: rgba(88,166,255,0.2);  color: var(--blue); }
+    .jwt-pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    .exp-ok  { color: var(--green); font-size: 0.78rem; margin-top: 0.5rem; }
+    .exp-bad { color: var(--red);   font-size: 0.78rem; margin-top: 0.5rem; }
+    .logs-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      padding: 0.45rem 1rem;
+      background: rgba(188,140,255,0.12);
+      color: var(--purple);
+      border: 1px solid rgba(188,140,255,0.3);
+      border-radius: 7px;
+      font-size: 0.82rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ── TOAST ── */
+    #toasts {
+      position: fixed; bottom: 1.25rem; right: 1.25rem;
+      display: flex; flex-direction: column; gap: 0.4rem; z-index: 9999;
+    }
+    .toast {
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      max-width: 300px;
+      animation: tslide 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .toast.ok  { background: rgba(63,185,80,0.15);  color: var(--green);  border: 1px solid rgba(63,185,80,0.3); }
+    .toast.err { background: rgba(248,81,73,0.15);  color: var(--red);    border: 1px solid rgba(248,81,73,0.3); }
+    .toast.inf { background: rgba(88,166,255,0.15); color: var(--blue);   border: 1px solid rgba(88,166,255,0.3); }
+    @keyframes tslide { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    .spin {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="auth-page">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">Task Board — Final Lab</div>
+    <div class="login-sub">ENGSE207 · Software Architecture</div>
+
+    <div class="field">
+      <label>Email</label>
+      <input id="em" type="email" value="alice@lab.local" placeholder="email@lab.local">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="pw" type="password" value="alice123" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div id="lmsg" class="login-msg" style="display:none"></div>
+
+    <div class="seed-hint">
+      <strong>🔑 Seed Users</strong><br>
+      alice@lab.local / alice123 &nbsp;<span style="color:#58a6ff">(member)</span><br>
+      bob@lab.local / bob456 &nbsp;<span style="color:#58a6ff">(member)</span><br>
+      admin@lab.local / adminpass &nbsp;<span style="color:#bc8cff">(admin)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app-page" class="hidden">
+  <nav class="sidebar">
+    <div class="sb-logo">📋 Task Board</div>
+    <div class="sb-nav">
+      <button class="sb-link on" data-pg="tasks" onclick="goPage('tasks')">
+        <span class="ico">✅</span> Tasks
+        <span class="cnt" id="tcnt">0</span>
+      </button>
+      <button class="sb-link" data-pg="profile" onclick="goPage('profile')">
+        <span class="ico">👤</span> Profile &amp; JWT
+      </button>
+      <a href="logs.html" target="_blank" class="sb-link" style="text-decoration:none">
+        <span class="ico">📊</span> Log Dashboard
+        <span style="margin-left:auto;font-size:.65rem;color:var(--muted)">↗</span>
+      </a>
+    </div>
+    <div class="sb-bottom">
+      <div class="user-row">
+        <div class="uavatar" id="uav">?</div>
+        <div class="uinfo">
+          <div class="uname" id="uname">—</div>
+          <span class="urole" id="urole">—</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()" title="ออกจากระบบ">✕</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- TASKS PAGE -->
+    <div id="pg-tasks">
+      <div class="topbar">
+        <div class="topbar-title">✅ Tasks</div>
+        <button class="btn-new" onclick="openCreate()">＋ สร้าง Task ใหม่</button>
+      </div>
+      <div class="page-body">
+        <div class="stats">
+          <div class="stat"><div class="stat-num" id="s-all">—</div><div class="stat-lbl">ทั้งหมด</div></div>
+          <div class="stat"><div class="stat-num" id="s-todo" style="color:var(--muted)">—</div><div class="stat-lbl">TODO</div></div>
+          <div class="stat"><div class="stat-num" id="s-ip" style="color:var(--yellow)">—</div><div class="stat-lbl">In Progress</div></div>
+          <div class="stat"><div class="stat-num" id="s-done" style="color:var(--green)">—</div><div class="stat-lbl">Done</div></div>
+        </div>
+        <div class="toolbar">
+          <button class="fbtn on"  onclick="setF('ALL')">ทั้งหมด</button>
+          <button class="fbtn"     onclick="setF('TODO')">TODO</button>
+          <button class="fbtn"     onclick="setF('IN_PROGRESS')">In Progress</button>
+          <button class="fbtn"     onclick="setF('DONE')">Done</button>
+          <div class="gap"></div>
+          <button class="fbtn"     onclick="loadTasks()">🔄 Refresh</button>
+        </div>
+        <div class="tasklist" id="tlist">
+          <div class="empty"><div class="big">⏳</div><p>กำลังโหลด...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="pg-profile" class="hidden">
+      <div class="topbar">
+        <div class="topbar-title">👤 Profile &amp; JWT</div>
+      </div>
+      <div class="page-body">
+        <div class="pcard">
+          <div class="phead">
+            <div class="pavatar" id="pav">?</div>
+            <div>
+              <div style="font-size:1.15rem;font-weight:700" id="pname">—</div>
+              <div style="font-size:0.82rem;color:var(--muted);margin-top:2px" id="pemail">—</div>
+              <span class="urole" id="prole" style="margin-top:4px;display:inline-block">—</span>
+            </div>
+          </div>
+          <div class="pgrid">
+            <div class="pi"><label>User ID</label><p id="pid">—</p></div>
+            <div class="pi"><label>Role</label><p id="prole2">—</p></div>
+            <div class="pi"><label>สมัครเมื่อ</label><p id="pcreated">—</p></div>
+            <div class="pi"><label>Endpoint</label><p style="font-size:.75rem;color:var(--muted)">GET /api/auth/me</p></div>
+          </div>
+          <div class="jwt-box">
+            <h4>🔍 JWT Token Inspector</h4>
+            <div class="jwt-parts" id="jparts"></div>
+            <div id="jpayload"></div>
+            <div id="jexp"></div>
+          </div>
+          <a href="logs.html" target="_blank" class="logs-btn">📊 Log Dashboard (admin only) →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TASK MODAL ── -->
+<div id="tmodal" class="overlay hidden">
+  <div class="mbox">
+    <div class="mhead">
+      <h3 id="mtitle">สร้าง Task</h3>
+      <button class="mclose" onclick="closeM()">✕</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="mid">
+      <div class="field"><label>ชื่อ Task *</label><input id="mtask" placeholder="เช่น: ออกแบบ UI หน้า Login"></div>
+      <div class="field"><label>รายละเอียด</label><textarea id="mdesc" placeholder="อธิบายรายละเอียด..."></textarea></div>
+      <div class="row2">
+        <div class="field">
+          <label>สถานะ</label>
+          <select id="mstatus">
+            <option value="TODO">⬜ TODO</option>
+            <option value="IN_PROGRESS">🔄 In Progress</option>
+            <option value="DONE">✅ Done</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="mpri">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeM()">ยกเลิก</button>
+      <button class="btn-save"   onclick="submitTask()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM DELETE ── -->
+<div id="dmodal" class="overlay hidden">
+  <div class="mbox" style="max-width:360px">
+    <div class="mbody" style="text-align:center;padding:1.75rem">
+      <div style="font-size:2.5rem;margin-bottom:.75rem">🗑️</div>
+      <p style="font-weight:700;font-size:1rem">ลบ Task นี้?</p>
+      <p style="color:var(--muted);font-size:.82rem;margin-top:.35rem">ไม่สามารถกู้คืนได้</p>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeD()">ยกเลิก</button>
+      <button class="btn-del2"   id="dbtn">🗑️ ลบเลย</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('jwt_token');
+let me = null, tasks = [], filter = 'ALL';
+
+const H = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` });
+
+function toast(msg, type='inf', ms=3000) {
+  const d = document.createElement('div');
+  d.className = `toast ${type}`;
+  d.textContent = msg;
+  document.getElementById('toasts').prepend(d);
+  setTimeout(() => d.remove(), ms);
+}
+
+function showMsg(msg, cls) {
+  const el = document.getElementById('lmsg');
+  el.className = `login-msg ${cls}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+/* ── AUTH ── */
+async function doLogin() {
+  const email = document.getElementById('em').value.trim();
+  const pass  = document.getElementById('pw').value;
+  if (!email || !pass) { showMsg('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+
+  const btn = document.querySelector('.btn-login');
+  btn.innerHTML = '<span class="spin"></span> กำลังเข้าสู่ระบบ...';
+  btn.disabled = true;
+
+  const r = await fetch(`${API}/api/auth/login`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ email, password: pass })
+  });
+  const d = await r.json();
+
+  btn.textContent = 'เข้าสู่ระบบ';
+  btn.disabled = false;
+
+  if (r.ok) {
+    token = d.token;
+    localStorage.setItem('jwt_token', token);
+    startApp(d.user);
+  } else {
+    showMsg('❌ ' + (d.error || 'Login ล้มเหลว'), 'err');
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('jwt_token');
+  token = null; me = null; tasks = [];
+  document.getElementById('app-page').classList.add('hidden');
+  document.getElementById('auth-page').classList.remove('hidden');
+}
+
+/* ── INIT ── */
+function startApp(user) {
+  me = user;
+  document.getElementById('auth-page').classList.add('hidden');
+  document.getElementById('app-page').classList.remove('hidden');
+
+  const ini = (user.username || user.email || '?').charAt(0).toUpperCase();
+  document.getElementById('uav').textContent   = ini;
+  document.getElementById('uname').textContent = user.username || user.email;
+  const rb = document.getElementById('urole');
+  rb.textContent = user.role;
+  rb.className   = `urole ${user.role}`;
+
+  goPage('tasks');
+}
+
+/* ── NAVIGATION ── */
+function goPage(pg) {
+  ['tasks','profile'].forEach(p => {
+    document.getElementById(`pg-${p}`).classList.toggle('hidden', p !== pg);
+    document.querySelectorAll(`[data-pg="${p}"]`).forEach(b => b.classList.toggle('on', p === pg));
+  });
+  if (pg === 'tasks')   loadTasks();
+  if (pg === 'profile') loadProfile();
+}
+
+/* ── TASKS ── */
+async function loadTasks() {
+  const r = await fetch(`${API}/api/tasks/`, { headers: H() });
+  const d = await r.json();
+  if (!r.ok) { if (r.status === 401) { toast('Session หมดอายุ','err'); doLogout(); } return; }
+  tasks = d.tasks || [];
+  renderStats();
+  renderTasks();
+  document.getElementById('tcnt').textContent = tasks.length;
+}
+
+function renderStats() {
+  document.getElementById('s-all').textContent  = tasks.length;
+  document.getElementById('s-todo').textContent = tasks.filter(t=>t.status==='TODO').length;
+  document.getElementById('s-ip').textContent   = tasks.filter(t=>t.status==='IN_PROGRESS').length;
+  document.getElementById('s-done').textContent = tasks.filter(t=>t.status==='DONE').length;
+}
+
+function setF(f) {
+  filter = f;
+  document.querySelectorAll('.fbtn').forEach(b => {
+    b.classList.toggle('on',
+      (f==='ALL' && b.textContent==='ทั้งหมด') ||
+      b.textContent===f ||
+      (f==='IN_PROGRESS' && b.textContent==='In Progress')
+    );
+  });
+  renderTasks();
+}
+
+function renderTasks() {
+  const list = filter==='ALL' ? tasks : tasks.filter(t=>t.status===filter);
+  const el = document.getElementById('tlist');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="big">📭</div><p>ไม่มี Task</p></div>`;
+    return;
+  }
+  const statusTag = {
+    TODO:        `<span class="tag tag-todo">⬜ TODO</span>`,
+    IN_PROGRESS: `<span class="tag tag-inprog">🔄 In Progress</span>`,
+    DONE:        `<span class="tag tag-done">✅ Done</span>`,
+  };
+  el.innerHTML = list.map(t => `
+    <div class="tcard ${t.status}">
+      <div class="tcard-top">
+        <div class="tcard-title ${t.status==='DONE'?'done':''}">${esc(t.title)}</div>
+        <div class="tcard-acts">
+          <button class="ibtn edit" onclick="openEdit(${t.id})" title="แก้ไข">✏️</button>
+          <button class="ibtn del"  onclick="askDel(${t.id})"   title="ลบ">🗑️</button>
+        </div>
+      </div>
+      ${t.description ? `<div class="tcard-desc">${esc(t.description)}</div>` : ''}
+      <div class="tcard-meta">
+        ${statusTag[t.status]||''}
+        <span class="tag tag-${t.priority}">${{low:'🟢',medium:'🟡',high:'🔴'}[t.priority]||'·'} ${t.priority}</span>
+        <span class="tag tag-user">👤 ${esc(t.username||'?')}</span>
+        <select class="ssel" onchange="quickSt(${t.id},this.value)">
+          <option value="TODO"        ${t.status==='TODO'?'selected':''}>⬜ TODO</option>
+          <option value="IN_PROGRESS" ${t.status==='IN_PROGRESS'?'selected':''}>🔄 In Progress</option>
+          <option value="DONE"        ${t.status==='DONE'?'selected':''}>✅ Done</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── CRUD ── */
+function openCreate() {
+  document.getElementById('mtitle').textContent = '➕ สร้าง Task ใหม่';
+  document.getElementById('mid').value = '';
+  document.getElementById('mtask').value = '';
+  document.getElementById('mdesc').value = '';
+  document.getElementById('mstatus').value = 'TODO';
+  document.getElementById('mpri').value = 'medium';
+  document.getElementById('tmodal').classList.remove('hidden');
+  document.getElementById('mtask').focus();
+}
+
+function openEdit(id) {
+  const t = tasks.find(x=>x.id===id); if (!t) return;
+  document.getElementById('mtitle').textContent = '✏️ แก้ไข Task';
+  document.getElementById('mid').value    = t.id;
+  document.getElementById('mtask').value  = t.title;
+  document.getElementById('mdesc').value  = t.description||'';
+  document.getElementById('mstatus').value = t.status;
+  document.getElementById('mpri').value   = t.priority;
+  document.getElementById('tmodal').classList.remove('hidden');
+}
+
+function closeM() { document.getElementById('tmodal').classList.add('hidden'); }
+
+async function submitTask() {
+  const id    = document.getElementById('mid').value;
+  const title = document.getElementById('mtask').value.trim();
+  if (!title) { toast('กรุณาใส่ชื่อ Task','err'); return; }
+
+  const body = {
+    title,
+    description: document.getElementById('mdesc').value,
+    status:      document.getElementById('mstatus').value,
+    priority:    document.getElementById('mpri').value,
+  };
+
+  const btn = document.querySelector('.btn-save');
+  btn.innerHTML = '<span class="spin"></span>';
+  btn.disabled = true;
+
+  const r = await fetch(id ? `${API}/api/tasks/${id}` : `${API}/api/tasks/`, {
+    method: id ? 'PUT' : 'POST', headers: H(), body: JSON.stringify(body)
+  });
+
+  btn.textContent = '💾 บันทึก';
+  btn.disabled = false;
+
+  if (r.ok) {
+    toast(id ? '✅ อัปเดตแล้ว' : '✅ สร้างแล้ว', 'ok');
+    closeM(); loadTasks();
+  } else {
+    const d = await r.json();
+    if (r.status===403) toast('🚫 403 Forbidden','err',4000);
+    else toast('❌ '+(d.error||'เกิดข้อผิดพลาด'),'err');
+  }
+}
+
+async function quickSt(id, s) {
+  const r = await fetch(`${API}/api/tasks/${id}`, {
+    method:'PUT', headers:H(), body:JSON.stringify({status:s})
+  });
+  if (r.ok) { toast(`🔄 → ${s}`,'inf',1800); loadTasks(); }
+  else       { toast('❌ อัปเดตไม่สำเร็จ','err'); loadTasks(); }
+}
+
+let delId = null;
+function askDel(id) {
+  delId = id;
+  document.getElementById('dmodal').classList.remove('hidden');
+  document.getElementById('dbtn').onclick = async () => {
+    const r = await fetch(`${API}/api/tasks/${delId}`, { method:'DELETE', headers:H() });
+    if (r.ok) { toast('🗑️ ลบแล้ว','inf'); closeD(); loadTasks(); }
+    else {
+      const d = await r.json();
+      toast('❌ '+(d.error||'Error'),'err');
+      closeD();
+    }
+  };
+}
+function closeD() { document.getElementById('dmodal').classList.add('hidden'); delId=null; }
+
+/* ── PROFILE ── */
+async function loadProfile() {
+  const r = await fetch(`${API}/api/auth/me`, { headers: H() });
+  if (!r.ok) { renderJWT(); return; }
+  const d = await r.json();
+  const u = d.user || me;
+  if (!u) return;
+
+  const ini = (u.username||u.email||'?').charAt(0).toUpperCase();
+  document.getElementById('pav').textContent     = ini;
+  document.getElementById('pname').textContent   = u.username||'—';
+  document.getElementById('pemail').textContent  = u.email;
+  document.getElementById('pid').textContent     = u.id||'—';
+  document.getElementById('prole2').textContent  = u.role;
+  document.getElementById('pcreated').textContent = u.created_at
+    ? new Date(u.created_at).toLocaleDateString('th-TH') : '—';
+  const rb = document.getElementById('prole');
+  rb.textContent = u.role;
+  rb.className   = `urole ${u.role}`;
+  renderJWT();
+}
+
+function renderJWT() {
+  if (!token) return;
+  const pts = token.split('.');
+  if (pts.length !== 3) return;
+  document.getElementById('jparts').innerHTML = `
+    <span class="jp jp1">${pts[0]}</span>
+    <span style="color:var(--muted)">.</span>
+    <span class="jp jp2">${pts[1]}</span>
+    <span style="color:var(--muted)">.</span>
+    <span class="jp jp3">${pts[2]}</span>
+  `;
+  try {
+    const pl   = JSON.parse(atob(pts[1]));
+    const exp  = new Date(pl.exp*1000);
+    const left = Math.round((exp-Date.now())/60000);
+    document.getElementById('jpayload').innerHTML =
+      `<p style="font-size:.72rem;color:var(--muted);margin-bottom:.4rem">🟣 Payload (ใครก็ decode ได้!):</p>
+       <pre class="jwt-pre">${JSON.stringify(pl,null,2)}</pre>`;
+    document.getElementById('jexp').innerHTML = left<0
+      ? `<div class="exp-bad">⚠️ Token หมดอายุแล้ว!</div>`
+      : `<div class="exp-ok">✅ ใช้ได้อีก ${left} นาที (หมด ${exp.toLocaleTimeString('th-TH')})</div>`;
+  } catch(e) {
+    document.getElementById('jpayload').innerHTML = '<p style="color:var(--red)">decode ไม่ได้</p>';
+  }
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// close on backdrop
+['tmodal','dmodal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target===e.currentTarget) id==='tmodal' ? closeM() : closeD();
+  });
+});
+
+// enter to login
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+
+// auto-login
+if (token) {
+  (async () => {
+    const r = await fetch(`${API}/api/auth/verify`, { headers:{ Authorization:`Bearer ${token}` } });
+    const d = await r.json();
+    if (d.valid) startApp(d.user);
+    else { localStorage.removeItem('jwt_token'); token=null; }
+  })();
+}
+</script>
+</body>
+</html>
